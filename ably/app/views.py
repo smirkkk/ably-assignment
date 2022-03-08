@@ -3,17 +3,19 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from .serializers import LoginSerializer, PhoneSerializer, CertifyPhoneSerializer, SignupSerializer, LoginSerializer
 
+
 def get_jwt_token(data) -> str:
     """
     로그인
     """
     serializer = LoginSerializer(data=data)
-    
+
     if serializer.is_valid(raise_exception=True):
         token = serializer.validated_data
         return token
     else:
         return None
+
 
 class SendPinView(APIView):
     """
@@ -23,7 +25,7 @@ class SendPinView(APIView):
 
     def send_pin(self, phone):
         print("인증번호 발송")
-        
+
         return True
 
     def post(self, request):
@@ -56,11 +58,15 @@ class CertifyPhoneView(APIView):
             return Response()
 
 
-class SignupView(APIView):
+class UserView(APIView):
     """
-    회원가입
+    get : 현재 로그인한 유저 정보 조회
+    post : 회원가입
     """
     permission_classes = (AllowAny, )
+
+    def get(self, request):
+        return Response()
 
     def post(self, request):
         phone = request.session.get('phone', None)
@@ -88,11 +94,6 @@ class LoginView(APIView):
     def post(self, request):
         token = get_jwt_token(data=request.data)
         return Response(token)
-
-
-class GetUserDataView(APIView):
-    # 현재 로그인된 유저 serializer
-    pass
 
 
 class ResetPasswordView(APIView):
