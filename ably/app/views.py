@@ -1,8 +1,19 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from .serializers import PhoneSerializer, CertifyPhoneSerializer
+from .serializers import LoginSerializer, PhoneSerializer, CertifyPhoneSerializer, SignupSerializer, LoginSerializer
 
+def get_jwt_token(data) -> str:
+    """
+    로그인
+    """
+    serializer = LoginSerializer(data=data)
+    
+    if serializer.is_valid(raise_exception=True):
+        token = serializer.validated_data
+        return token
+    else:
+        return None
 
 class SendPinView(APIView):
     """
@@ -43,3 +54,50 @@ class CertifyPhoneView(APIView):
             phone = request.data.get('phone', None)
             request.session['phone'] = phone  # 인증된 전화번호 세션에 저장
             return Response()
+
+
+class SignupView(APIView):
+    """
+    회원가입
+    """
+    permission_classes = (AllowAny, )
+
+    def post(self, request):
+        phone = request.session.get('phone', None)
+        data = request.data.dict()
+        data['phone'] = phone
+
+        serializer = SignupSerializer(data=data)
+
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+
+            # 방금 가입한 정보로 로그인
+            token = get_jwt_token(data)
+            del request.session['phone']  # 세션에서 전화번호 삭제
+
+            return Response(token)
+
+
+class LoginView(APIView):
+    """
+    로그인
+    """
+    permission_classes = (AllowAny, )
+
+    def post(self, request):
+        token = get_jwt_token(data=request.data)
+        return Response(token)
+
+
+class GetUserDataView(APIView):
+    # 현재 로그인된 유저 serializer
+    pass
+
+
+class ResetPasswordView(APIView):
+    # 전화번호 세션 체크
+    # 비밀번호 체크 후 make_password
+    pass
+
+# 비밀번호 재설정 (로그인 안 되었을때, 전화번호 인증 후)
