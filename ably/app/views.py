@@ -1,7 +1,8 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from .serializers import LoginSerializer, PhoneSerializer, CertifyPhoneSerializer, SignupSerializer, LoginSerializer
+
+from .serializers import LoginSerializer, PhoneSerializer, CertifyPhoneSerializer, SignupSerializer, LoginSerializer, UserSerializer
 
 
 def get_jwt_token(data) -> str:
@@ -63,10 +64,17 @@ class UserView(APIView):
     get : 현재 로그인한 유저 정보 조회
     post : 회원가입
     """
-    permission_classes = (AllowAny, )
+    
+    def get_permissions(self):
+        # 메소드에 따라 permission 구분
+        if self.request.method == "GET":
+            return [IsAuthenticated()]
+        elif self.request.method == "POST":
+            return [AllowAny()]
 
     def get(self, request):
-        return Response()
+        serializer = UserSerializer(request.user)
+        return Response(serializer.data)
 
     def post(self, request):
         phone = request.session.get('phone', None)

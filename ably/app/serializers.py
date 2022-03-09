@@ -190,3 +190,12 @@ class LoginSerializer(serializers.Serializer):
             return token
         else:
             raise serializers.ValidationError("입력값을 확인해주세요.")
+
+
+class UserSerializer(serializers.ModelSerializer):
+    """
+    회원 정보 조회
+    """
+    class Meta:
+        model = User
+        fields = ["username", "email", "first_name", "last_name", "phone"]
