@@ -48,7 +48,7 @@ class SignupTest(TestCase):
 
         self.assertEqual(response.status_code, 200)
 
-        response = self.client.post("/users", {
+        response = self.client.post("/users/", {
             'phone': test_phone,
             'nickname': test_nickname,
             'first_name': test_first_name,
@@ -64,7 +64,7 @@ class SignupTest(TestCase):
         token = response.json()['token']
         header = {'HTTP_AUTHORIZATION': f'jwt {token}'}
 
-        response = self.client.get("/users", **header)
+        response = self.client.get("/users/", **header)
         self.assertEqual(response.status_code, 200)
 
         user_data = response.json()
@@ -77,7 +77,7 @@ class SignupTest(TestCase):
         self.assertEqual(user_data['last_name'], test_last_name)
 
     def test_get_user_data_without_token(self):
-        response = self.client.get("/users")
+        response = self.client.get("/users/")
         self.assertEqual(response.status_code, 401)
 
 
@@ -85,9 +85,33 @@ class LoginTest(TestCase):
     @classmethod
     def setUpTestData(cls):
         user = User.objects.create(
-            username=test_username, email=test_email, phone=test_phone)
+            username=test_username, email=test_email, phone=test_phone, 
+            nickname=test_nickname, first_name=test_first_name, 
+            last_name=test_last_name)
+
         user.set_password(test_password)
         user.save()
+
+    def test_user_data(self):
+        response = self.client.post("/users/login", {
+            'username': test_username,
+            'password': test_password
+        }, content_type='application/json')
+        token = response.json()['token']
+
+        header = {'HTTP_AUTHORIZATION': f'jwt {token}'}
+
+        response = self.client.get("/users/", **header)
+        self.assertEqual(response.status_code, 200)
+
+        user_data = response.json()
+
+        self.assertEqual(user_data['phone'], test_phone)
+        self.assertEqual(user_data['email'], test_email)
+        self.assertEqual(user_data['username'], test_username)
+        self.assertEqual(user_data['nickname'], test_nickname)
+        self.assertEqual(user_data['first_name'], test_first_name)
+        self.assertEqual(user_data['last_name'], test_last_name)
 
     def test_login_by_username(self):
         response = self.client.post("/users/login", {
@@ -96,6 +120,7 @@ class LoginTest(TestCase):
         }, content_type='application/json')
 
         self.assertEqual(response.status_code, 200)
+        self.assertTrue('token' in response.json().keys())
 
     def test_login_by_phone(self):
         response = self.client.post("/users/login", {
@@ -104,6 +129,7 @@ class LoginTest(TestCase):
         }, content_type='application/json')
 
         self.assertEqual(response.status_code, 200)
+        self.assertTrue('token' in response.json().keys())
 
     def test_login_by_email(self):
         response = self.client.post("/users/login", {
@@ -112,6 +138,7 @@ class LoginTest(TestCase):
         }, content_type='application/json')
 
         self.assertEqual(response.status_code, 200)
+        self.assertTrue('token' in response.json().keys())
 
     def test_login_failed_by_wrong_password(self):
         response = self.client.post("/users/login", {
