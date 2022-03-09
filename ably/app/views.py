@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
-from .serializers import LoginSerializer, PhoneSerializer, CertifyPhoneSerializer, SignupSerializer, LoginSerializer, UserSerializer
+from .serializers import LoginSerializer, PhoneSerializer, CertifyPhoneSerializer, SignupSerializer, LoginSerializer, UserSerializer, PasswordSerializer
 
 
 def get_jwt_token(data) -> str:
@@ -64,7 +64,7 @@ class UserView(APIView):
     get : 현재 로그인한 유저 정보 조회
     post : 회원가입
     """
-    
+
     def get_permissions(self):
         # 메소드에 따라 permission 구분
         if self.request.method == "GET":
@@ -105,8 +105,22 @@ class LoginView(APIView):
 
 
 class ResetPasswordView(APIView):
-    # 전화번호 세션 체크
-    # 비밀번호 체크 후 make_password
-    pass
+    """
+    비밀번호 재설정
+    """
 
-# 비밀번호 재설정 (로그인 안 되었을때, 전화번호 인증 후)
+    permission_classes = (AllowAny, )
+
+    def post(self, request):
+        phone = request.session.get('phone', None)
+        data = request.data.dict()
+        data['phone'] = phone
+
+        serializer = PasswordSerializer(data=data)
+
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+
+            del request.session['phone']  # 세션에서 전화번호 삭제
+
+            return Response()

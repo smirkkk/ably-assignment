@@ -129,7 +129,7 @@ class SignupSerializer(serializers.Serializer):
                                      username_validator, UniqueValidator(queryset=User.objects.all(), message="중복된 아이디입니다.")])
     password = serializers.CharField(
         required=True, validators=[password_validator])
-    password2 = serializers.CharField(required=True)
+    password2 = serializers.CharField(required=True) # 비밀번호 확인
     phone = serializers.CharField(required=True, max_length=11, validators=[
                                   UniqueValidator(queryset=User.objects.all(), message="중복된 전화번호입니다.")])
     nickname = serializers.CharField(required=True, max_length=20)
@@ -199,3 +199,48 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ["username", "email", "first_name", "last_name", "phone"]
+
+
+class PasswordSerializer(serializers.Serializer):
+    """
+    비밀번호 재설정
+    """
+
+    password = serializers.CharField(
+        required=True, validators=[password_validator])
+    password2 = serializers.CharField(required=True) # 비밀번호 확인
+    phone = serializers.CharField(required=True, max_length=11)
+
+    def validate(self, data):
+        password = data.get("password", None)
+        password2 = data.get("password2", None)
+        phone = data.get("phone", None)
+
+        if is_phone_unique(phone=phone):
+            raise serializers.ValidationError({
+                'phone': '존재하지 않는 전화번호입니다.'
+            })
+
+        if password != password2:
+            raise serializers.ValidationError({
+                'password2': '비밀번호가 일치하지 않습니다.'
+            })
+
+        return data
+
+    def save(self, **kwargs):
+
+        # 전화번호로 유저 찾기
+        try:
+            user = User.objects.get(phone=self.validated_data['phone'])
+        
+        except User.DoesNotExist:
+            raise serializers.ValidationError("존재하지 않는 전화번호입니다.")
+
+        except User.MultipleObjectsReturned:
+            raise serializers.ValidationError("전화번호를 확인해주세요.")
+
+        user.set_password(self.validated_data['password'])
+        user.save()
+
+        return user
