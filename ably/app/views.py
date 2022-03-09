@@ -42,6 +42,8 @@ class SendPinView(APIView):
 
             self.send_pin(phone)
             return Response(True)
+        else:
+            return Response(False)
 
 
 class CertifyPhoneView(APIView):
@@ -56,7 +58,10 @@ class CertifyPhoneView(APIView):
         if serializer.is_valid(raise_exception=True):
             phone = request.data.get('phone', None)
             request.session['phone'] = phone  # 인증된 전화번호 세션에 저장
-            return Response()
+            return Response(True)
+        else:
+            return Response(False)
+        
 
 
 class UserView(APIView):
@@ -90,7 +95,9 @@ class UserView(APIView):
             token = get_jwt_token(data)
             del request.session['phone']  # 세션에서 전화번호 삭제
 
-            return Response(token)
+            return Response(dict(token=token))
+        else:
+            return Response(False)
 
 
 class LoginView(APIView):
@@ -101,7 +108,7 @@ class LoginView(APIView):
 
     def post(self, request):
         token = get_jwt_token(data=request.data)
-        return Response(token)
+        return Response(dict(token=token))
 
 
 class ResetPasswordView(APIView):
@@ -123,4 +130,6 @@ class ResetPasswordView(APIView):
 
             del request.session['phone']  # 세션에서 전화번호 삭제
 
-            return Response()
+            return Response(True)
+        else:
+            return Response(False)
