@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 
 from datetime import timedelta
 from pathlib import Path
+import os
 import pymysql
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -80,10 +81,10 @@ pymysql.install_as_MySQLdb()
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'ably',
-        'USER': 'ably',
-        'PASSWORD': 'ably',
-        'HOST': '127.0.0.1',
+        'NAME': os.environ.get('DB_NAME', 'ably'),
+        'USER': os.environ.get('DB_USER', 'root'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', 'ably'),
+        'HOST': os.environ.get('DB_HOST', '127.0.0.1'),
         'PORT': '3306'
     }
 }
