@@ -83,7 +83,11 @@ class UserView(APIView):
 
     def post(self, request):
         phone = request.session.get('phone', None)
-        data = request.data.dict()
+        try:
+            data = request.data.dict()
+        except AttributeError:
+            data = request.data
+            
         data['phone'] = phone
 
         serializer = SignupSerializer(data=data)
@@ -120,7 +124,11 @@ class ResetPasswordView(APIView):
 
     def post(self, request):
         phone = request.session.get('phone', None)
-        data = request.data.dict()
+        try:
+            data = request.data.dict()
+        except AttributeError:
+            data = request.data
+
         data['phone'] = phone
 
         serializer = PasswordSerializer(data=data)
