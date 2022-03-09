@@ -87,7 +87,7 @@ class UserView(APIView):
             data = request.data.dict()
         except AttributeError:
             data = request.data
-            
+
         data['phone'] = phone
 
         serializer = SignupSerializer(data=data)
@@ -96,7 +96,8 @@ class UserView(APIView):
             serializer.save()
 
             # 방금 가입한 정보로 로그인
-            token = get_jwt_token(data)
+            token = get_jwt_token(
+                dict(username=data['username'], password=data['password']))
             del request.session['phone']  # 세션에서 전화번호 삭제
 
             return Response(dict(token=token))
